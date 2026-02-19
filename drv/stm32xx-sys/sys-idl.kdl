@@ -11,11 +11,13 @@ enum Port {
     case B
     case C
     case D
-    // E not implemented by any supported parts yet
+    case E
     case F
-    // G not implemented by any supported parts yet
+    case G
     case H
-    // I and later not implemented by any supported parts yet
+    case I
+    case J
+    case K
 
     rust-derive Copy Clone Debug
 }
@@ -170,6 +172,22 @@ method enable_clock {
     auto-retry
 }
 
+method enter_reset {
+    doc "Requests that the reset line to a peripheral be asserted."
+
+    operation 12
+    arg peripheral PeripheralName
+    auto-retry
+}
+
+method leave_reset {
+    doc "Requests that the reset line to a peripheral be deasserted."
+
+    operation 13
+    arg peripheral PeripheralName
+    auto-retry
+}
+
 on-cfg hubris_chip {
     is STM32G031 {
         enum PeripheralName {
@@ -219,6 +237,36 @@ on-cfg hubris_chip {
 
             case UsbOtg 0b001_01110
             case Crs 0b100_11000
+
+            rust-derive Copy Clone Debug
+        }
+    }
+    is STM32H7 {
+        enum PeripheralName {
+            doc "An enumeration of all RCC-controlled peripherals on the chip."
+
+            // Bitwise value is:
+            // bits 4:0: bit index in control registers
+            // bits 8:5: register index:
+            //  0000 AHB1ENR
+            //  0001 AHB2ENR
+            //  0010 AHB3ENR
+            //  0011 AHB4ENR
+            //  0100 APB1LENR
+            //  0101 APB1HENR
+            //  0110 APB2ENR
+            //  0111 APB3ENR
+            //  1000 APB4ENR
+
+            case Dma1 0b0000_00000
+            case Dma2 0b0000_00001
+            case Usb1Otg 0b0000_11001
+            case Usb2Otg 0b0000_11011
+
+            case Tim2 0b0100_00000
+            case Usart3 0b0100_10010
+
+            case Dfsdm1 0b0110_11100
 
             rust-derive Copy Clone Debug
         }

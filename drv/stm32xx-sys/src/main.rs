@@ -27,6 +27,8 @@ fn main() -> ! {
             rcc.gpioenr().modify(|r| r.0 |= 0b101111);
         } else if #[cfg(hubris_chip = "STM32U575")] {
             rcc.ahb2enr1().modify(|r| r.0 |= 0b11_1111_1111);
+        } else if #[cfg(hubris_chip = "STM32H7")] {
+            rcc.ahb4enr().modify(|r| r.0 |= 0b111_1111_1111);
         } else {
             compile_error!("unimplemented target chip");
         }
@@ -170,8 +172,76 @@ impl Stm32Sys for Server {
                     6 => rcc.apb2enr().modify(|r| r.0 |= 1 << bit_no),
                     _ => rcc.apb3enr().modify(|r| r.0 |= 1 << bit_no),
                 }
+            } else if #[cfg(hubris_chip = "STM32H7")] {
+                match reg_no {
+                    0 => rcc.ahb1enr().modify(|r| r.0 |= 1 << bit_no),
+                    1 => rcc.ahb2enr().modify(|r| r.0 |= 1 << bit_no),
+                    2 => rcc.ahb3enr().modify(|r| r.0 |= 1 << bit_no),
+                    3 => rcc.ahb4enr().modify(|r| r.0 |= 1 << bit_no),
+                    4 => rcc.apb1lenr().modify(|r| r.0 |= 1 << bit_no),
+                    5 => rcc.apb1henr().modify(|r| r.0 |= 1 << bit_no),
+                    6 => rcc.apb2enr().modify(|r| r.0 |= 1 << bit_no),
+                    7 => rcc.apb3enr().modify(|r| r.0 |= 1 << bit_no),
+                    _ => rcc.apb4enr().modify(|r| r.0 |= 1 << bit_no),
+                }
             } else {
                 compile_error!("unsupported chip family");
+            }
+        }
+
+        Ok(())
+    }
+
+    fn enter_reset(&mut self, _: Meta, peripheral: PeripheralName) -> Result<(), ReplyFaultReason> {
+        let bits = peripheral as u16;
+        let bit_no = usize::from(bits & 0x1F);
+        let reg_no = bits >> 5;
+        let rcc = stm32_metapac::RCC;
+
+        cfg_if! {
+            if #[cfg(hubris_chip = "STM32H7")] {
+                match reg_no {
+                    0 => rcc.ahb1rstr().modify(|r| r.0 |= 1 << bit_no),
+                    1 => rcc.ahb2rstr().modify(|r| r.0 |= 1 << bit_no),
+                    2 => rcc.ahb3rstr().modify(|r| r.0 |= 1 << bit_no),
+                    3 => rcc.ahb4rstr().modify(|r| r.0 |= 1 << bit_no),
+                    4 => rcc.apb1lrstr().modify(|r| r.0 |= 1 << bit_no),
+                    5 => rcc.apb1hrstr().modify(|r| r.0 |= 1 << bit_no),
+                    6 => rcc.apb2rstr().modify(|r| r.0 |= 1 << bit_no),
+                    7 => rcc.apb3rstr().modify(|r| r.0 |= 1 << bit_no),
+                    _ => rcc.apb4rstr().modify(|r| r.0 |= 1 << bit_no),
+                }
+            } else {
+                let _ = (bit_no, reg_no, rcc);
+                return Err(ReplyFaultReason::BadMessageContents);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn leave_reset(&mut self, _: Meta, peripheral: PeripheralName) -> Result<(), ReplyFaultReason> {
+        let bits = peripheral as u16;
+        let bit_no = usize::from(bits & 0x1F);
+        let reg_no = bits >> 5;
+        let rcc = stm32_metapac::RCC;
+
+        cfg_if! {
+            if #[cfg(hubris_chip = "STM32H7")] {
+                match reg_no {
+                    0 => rcc.ahb1rstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    1 => rcc.ahb2rstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    2 => rcc.ahb3rstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    3 => rcc.ahb4rstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    4 => rcc.apb1lrstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    5 => rcc.apb1hrstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    6 => rcc.apb2rstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    7 => rcc.apb3rstr().modify(|r| r.0 &= !(1 << bit_no)),
+                    _ => rcc.apb4rstr().modify(|r| r.0 &= !(1 << bit_no)),
+                }
+            } else {
+                let _ = (bit_no, reg_no, rcc);
+                return Err(ReplyFaultReason::BadMessageContents);
             }
         }
 
@@ -220,6 +290,21 @@ fn get_port(port: Port) -> Result<stm32_metapac::gpio::Gpio, ReplyFaultReason> {
 
         #[cfg(hubris_chip = "STM32L412")]
         Port::H => Ok(stm32_metapac::GPIOH),
+
+        #[cfg(hubris_chip = "STM32H7")]
+        Port::E => Ok(stm32_metapac::GPIOE),
+        #[cfg(hubris_chip = "STM32H7")]
+        Port::F => Ok(stm32_metapac::GPIOF),
+        #[cfg(hubris_chip = "STM32H7")]
+        Port::G => Ok(stm32_metapac::GPIOG),
+        #[cfg(hubris_chip = "STM32H7")]
+        Port::H => Ok(stm32_metapac::GPIOH),
+        #[cfg(hubris_chip = "STM32H7")]
+        Port::I => Ok(stm32_metapac::GPIOI),
+        #[cfg(hubris_chip = "STM32H7")]
+        Port::J => Ok(stm32_metapac::GPIOJ),
+        #[cfg(hubris_chip = "STM32H7")]
+        Port::K => Ok(stm32_metapac::GPIOK),
 
         _ => Err(ReplyFaultReason::BadMessageContents),
     }
