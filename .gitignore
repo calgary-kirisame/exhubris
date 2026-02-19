@@ -1,2 +1,7 @@
 /target
 .work/
+.cargo-home/
+
+# Build artifacts
+*-build.zip
+*.elf
