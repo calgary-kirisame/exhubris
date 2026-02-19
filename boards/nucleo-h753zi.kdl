@@ -1,0 +1,3 @@
+board nucleo-h753zi
+
+chip "proj:chips/stm32h753zi.kdl"

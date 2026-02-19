@@ -1,0 +1,104 @@
+chip STM32H753ZI
+target-triple thumbv7em-none-eabihf
+probe-rs-name STM32H753ZITx
+vector-table-size 0x298
+
+compatible {
+    - STM32H753ZI
+    - STM32H753xI
+    - STM32H753
+    - STM32H7
+    - arm-cortex-m7
+}
+
+memory {
+    region vectors {
+        base 0x0800_0000
+        size 0x400
+        read
+    }
+    region flash {
+        base 0x0800_0400
+        size 0x001F_FC00 // 2048 KiB - 0x400
+        read
+        execute
+    }
+    region ram {
+        base 0x2400_0000
+        size 0x8_0000 // 512 KiB (AXI SRAM)
+        read
+        write
+    }
+}
+
+peripheral rcc {
+    base 0x5802_4400
+    size 0x400
+}
+
+peripheral pwr {
+    base 0x5802_4800
+    size 0x400
+}
+
+peripheral gpios {
+    base 0x5802_0000
+    size 0x2C00 // GPIOA-GPIOK
+}
+
+peripheral syscfg {
+    base 0x5800_0400
+    size 0x400
+}
+
+peripheral exti {
+    base 0x5800_0000
+    size 0x400
+}
+
+peripheral usart3 {
+    base 0x4000_4800
+    size 0x400
+    irq irq 39
+}
+
+peripheral dfsdm1 {
+    base 0x4001_7000
+    size 0x400
+    irq flt0 110
+}
+
+peripheral usb_otg_hs {
+    base 0x4004_0000
+    size 0x4_0000
+    irq irq 77
+}
+
+peripheral usb_otg_fs {
+    base 0x4008_0000
+    size 0x4_0000
+    irq irq 101
+}
+
+peripheral dma1 {
+    base 0x4002_0000
+    size 0x400
+    irq stream0 11
+    irq stream1 12
+    irq stream2 13
+    irq stream3 14
+    irq stream4 15
+    irq stream5 16
+    irq stream6 17
+    irq stream7 47
+}
+
+peripheral dma2 {
+    base 0x4002_0400
+    size 0x400
+}
+
+peripheral dmamux1 {
+    base 0x4002_0800
+    size 0x400
+}
