@@ -448,9 +448,13 @@ fn generate_server_op_enum(iface: &InterfaceDef) -> miette::Result<(Ident, proc_
                 <#ty as hubpack::SerializedSize>::MAX_SIZE
             })
         }).collect::<miette::Result<Vec<_>>>()?;
-        Ok(quote::quote! {
-            #(#args)+*
-        })
+        if args.is_empty() {
+            Ok(quote::quote! { 0usize })
+        } else {
+            Ok(quote::quote! {
+                #(#args)+*
+            })
+        }
     }).collect::<miette::Result<Vec<_>>>()?;
     let reply_cases = iface.methods.iter().map(|(name, def)| {
         let discrim = format_ident!("{}", name.to_case(Case::Pascal));
