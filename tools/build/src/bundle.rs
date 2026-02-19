@@ -21,10 +21,6 @@ pub enum BundleError {
     MixedEndian,
     #[error("build output contains a mix of 32- and 64-bit objects")]
     MixedPointerWidth,
-    #[error("build output contains a mix of OS ABI values")]
-    MixedOsAbi,
-    #[error("build output contains a mix of ABI version values")]
-    MixedAbiVersion,
     #[error("build output contains a mix of machine types")]
     MixedMachine,
 }
@@ -73,9 +69,6 @@ pub fn make_bundle(
     let mut little_endian = BTreeSet::new();
     let mut is_64 = BTreeSet::new();
     let mut elf_machine = BTreeSet::new();
-    let mut elf_os_abi = BTreeSet::new();
-    let mut elf_abi_version = BTreeSet::new();
-
     let mut kernel_entry = None;
 
     if let Some(prs_name) = &app.board.chip.probe_rs_name {
@@ -111,9 +104,6 @@ pub fn make_bundle(
         little_endian.insert(elf.little_endian);
         is_64.insert(elf.is_64);
         elf_machine.insert(elf.header.e_machine);
-        elf_os_abi.insert(elf.header.e_ident[goblin::elf::header::EI_OSABI]);
-        elf_abi_version.insert(elf.header.e_ident[goblin::elf::header::EI_ABIVERSION]);
-
         for phdr in &elf.program_headers {
             if phdr.p_type != goblin::elf::program_header::PT_LOAD {
                 continue;
@@ -157,14 +147,6 @@ pub fn make_bundle(
         return Err(BundleError::MixedPointerWidth);
     }
     let is_64 = is_64.pop_last().unwrap();
-    if elf_os_abi.len() == 2 {
-        return Err(BundleError::MixedOsAbi);
-    }
-    let elf_os_abi = elf_os_abi.pop_last().unwrap();
-    if elf_abi_version.len() == 2 {
-        return Err(BundleError::MixedAbiVersion);
-    }
-    let elf_abi_version = elf_abi_version.pop_last().unwrap();
     if elf_machine.len() == 2 {
         return Err(BundleError::MixedMachine);
     }
@@ -190,8 +172,8 @@ pub fn make_bundle(
     w.reserve_section_headers();
 
     w.write_file_header(&object::write::elf::FileHeader {
-        os_abi: elf_os_abi,
-        abi_version: elf_abi_version,
+        os_abi: 0,
+        abi_version: 0,
         e_type: object::elf::ET_REL,
         e_machine: elf_machine,
         e_entry: kernel_entry.unwrap(),
