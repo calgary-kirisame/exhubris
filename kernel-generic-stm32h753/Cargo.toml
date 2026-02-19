@@ -1,0 +1,21 @@
+[package]
+name = "kernel-generic-stm32h753"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+clock-hsi48-on = []
+pwr-vddusb-valid = []
+audio-pll2-49mhz = []
+
+[dependencies]
+cfg-if = "1.0.0"
+cortex-m = { version = "0.7.7", features = ["inline-asm"] }
+cortex-m-rt = "0.7.5"
+stm32-metapac = { version = "15.0.0", features = ["rt", "stm32h753zi"] }
+
+[dependencies.hubris-kern]
+package = "kern"
+git = "https://github.com/cbiffle/hubris-fork.git"
+branch = "cbiffle/exhubris-fixes"
+features = ["stack-watermark"]
